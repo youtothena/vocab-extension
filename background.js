@@ -119,7 +119,7 @@ async function handleExportToSheets(lang, cards) {
   const sheetName = lang.toUpperCase();
   const values = [];
   for (const card of cards) {
-    for (const w of card.words) {
+    for (const w of (card.words || [])) {
       values.push([w.word, w.meaning, w.sentence, card.date || '']);
     }
   }

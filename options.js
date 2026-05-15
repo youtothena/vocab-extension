@@ -195,3 +195,10 @@ function escapeHtml(str) {
 function escapeAttr(str) {
   return String(str || '').replace(/"/g, '&quot;');
 }
+
+// 페이지 로드 시 단어장 카운트 초기화
+document.addEventListener('DOMContentLoaded', () => {
+  chrome.storage.local.get('wordCards', ({ wordCards = [] }) => {
+    updateLangCounts(wordCards);
+  });
+});
