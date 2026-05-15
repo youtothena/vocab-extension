@@ -99,7 +99,7 @@ let popup = null;
 let currentData = null;
 let translateTimeout = null;
 
-document.addEventListener('mouseup', onMouseUp);
+document.addEventListener('mouseup', onMouseUp, true);
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') removePopup(); });
 document.addEventListener('mousedown', (e) => {
   if (!popup) return;
@@ -109,15 +109,23 @@ document.addEventListener('mousedown', (e) => {
 
 function onMouseUp() {
   clearTimeout(translateTimeout);
+
+  // Capture selection immediately — a 300ms delay lets page scripts clear it
+  const selection = window.getSelection();
+  const text = selection?.toString().trim();
+  if (!text || text.length < 10) { removePopup(); return; }
+
+  let rect;
+  try {
+    rect = selection.getRangeAt(0).getBoundingClientRect();
+  } catch {
+    removePopup();
+    return;
+  }
+
+  const words = extractKeywords(text);
+
   translateTimeout = setTimeout(async () => {
-    const selection = window.getSelection();
-    const text = selection?.toString().trim();
-    if (!text || text.length < 10) { removePopup(); return; }
-
-    const range = selection.getRangeAt(0);
-    const rect = range.getBoundingClientRect();
-    const words = extractKeywords(text);
-
     const { extensionEnabled, targetLang = 'en' } =
       await chrome.storage.local.get(['extensionEnabled', 'targetLang']);
     if (extensionEnabled === false) return;
