@@ -12,7 +12,6 @@ const STOP_WORDS = new Set([
   'during','without','within','along','following','across','behind','beyond'
 ]);
 
-// CSS 인라인 — 비동기 로딩 레이스 컨디션 없음
 const POPUP_CSS = `
 #vocab-popup {
   position: fixed;
@@ -38,6 +37,9 @@ const POPUP_CSS = `
   border-bottom: 1px solid #f1f5f9;
 }
 .vp-icon { font-size: 14px; }
+.vp-lang-badge {
+  font-size: 11px; color: #94a3b8; font-weight: 400; margin-left: 2px;
+}
 .vp-x {
   margin-left: auto; background: none; border: none;
   cursor: pointer; color: #94a3b8; font-size: 14px; padding: 0 2px; line-height: 1;
@@ -82,16 +84,13 @@ const POPUP_CSS = `
 .vp-save-error { color: #ef4444; }
 `;
 
-// Shadow DOM 호스트 설정
 const host = document.createElement('div');
 host.id = 'vocab-saver-host';
-// 호스트 자체는 레이아웃에 영향 없게
 host.style.cssText = 'all: initial; position: fixed; top: 0; left: 0; width: 0; height: 0; z-index: 2147483647; pointer-events: none;';
 document.documentElement.appendChild(host);
 
 const shadow = host.attachShadow({ mode: 'open' });
 
-// CSS 동기 주입
 const styleEl = document.createElement('style');
 styleEl.textContent = POPUP_CSS;
 shadow.appendChild(styleEl);
@@ -110,20 +109,28 @@ document.addEventListener('mousedown', (e) => {
 
 function onMouseUp() {
   clearTimeout(translateTimeout);
-  translateTimeout = setTimeout(() => {
+  translateTimeout = setTimeout(async () => {
+    const { extensionEnabled } = await chrome.storage.local.get('extensionEnabled');
+    if (extensionEnabled === false) return;
+
     const selection = window.getSelection();
     const text = selection?.toString().trim();
     if (!text || text.length < 10) { removePopup(); return; }
 
+    const { targetLang = 'en' } = await chrome.storage.local.get('targetLang');
     const range = selection.getRangeAt(0);
     const rect = range.getBoundingClientRect();
     const words = extractKeywords(text);
 
     showLoading(rect);
 
-    chrome.runtime.sendMessage({ action: 'translate', text, words }, (response) => {
+    chrome.runtime.sendMessage({ action: 'translate', text, words, targetLang }, (response) => {
       if (chrome.runtime.lastError || response?.error) {
         showError(response?.error || '번역 중 오류가 발생했습니다.', rect);
+        return;
+      }
+      if (response?.skip) {
+        removePopup();
         return;
       }
       currentData = response;
@@ -133,7 +140,7 @@ function onMouseUp() {
 }
 
 function extractKeywords(text) {
-  const words = text.match(/\b[a-zA-Z]+\b/g) || [];
+  const words = text.match(/\b[a-zA-Z\u00C0-\u024F\u4E00-\u9FFF\u3040-\u30FF]+\b/g) || [];
   const seen = new Set();
   const result = [];
   for (const w of words) {
@@ -163,9 +170,12 @@ function showError(msg, rect) {
   mountAndPosition(popup, rect);
 }
 
-function showResult({ translation, words }, rect) {
+function showResult({ detectedLang, translation, words }, rect) {
+  const langBadge = detectedLang
+    ? `<span class="vp-lang-badge">[${escapeHtml(detectedLang.toUpperCase())} →]</span>`
+    : '';
   const wordsHtml = words.length === 0 ? '' : `
-    <div class="vp-section-label">단어장 추가</div>
+    <div class="vp-section-label">주요 단어</div>
     <div class="vp-words">
       ${words.map(({ word, meaning, sentence }) => `
         <div class="vp-word-item">
@@ -179,43 +189,58 @@ function showResult({ translation, words }, rect) {
   removePopup();
   popup = createPopup(`
     <div class="vp-header">
-      <span class="vp-icon">📖</span> 번역
+      <span class="vp-icon">📖</span> 번역 ${langBadge}
       <button class="vp-x" title="닫기">✕</button>
     </div>
     <div class="vp-translation">${escapeHtml(translation)}</div>
     ${wordsHtml}
     <div class="vp-actions">
-      ${words.length > 0 ? `<button class="vp-btn vp-confirm">확인</button>` : ''}
+      <button class="vp-btn vp-confirm">카드 저장</button>
       <button class="vp-btn vp-close">닫기</button>
     </div>
   `);
 
   popup.querySelector('.vp-x').addEventListener('click', removePopup);
   popup.querySelector('.vp-close').addEventListener('click', removePopup);
-  popup.querySelector('.vp-confirm')?.addEventListener('click', onConfirm);
+  popup.querySelector('.vp-confirm').addEventListener('click', onSaveCard);
   mountAndPosition(popup, rect);
 }
 
-function onConfirm() {
-  if (!currentData?.words?.length) return;
+async function onSaveCard() {
+  if (!currentData) return;
   const btn = popup.querySelector('.vp-confirm');
   btn.textContent = '저장 중...';
   btn.disabled = true;
 
-  chrome.runtime.sendMessage({ action: 'saveToSheets', data: currentData.words }, (response) => {
-    if (chrome.runtime.lastError || response?.error) {
-      btn.textContent = '오류';
-      btn.style.background = '#ef4444';
-      const msg = document.createElement('div');
-      msg.className = 'vp-save-msg vp-save-error';
-      msg.textContent = response?.error || '저장 실패';
-      popup.querySelector('.vp-actions').before(msg);
-    } else {
-      btn.textContent = `저장 완료 (${response.count}개)`;
-      btn.style.background = '#22c55e';
-      setTimeout(removePopup, 1500);
-    }
-  });
+  try {
+    await saveCard(currentData);
+    btn.textContent = '저장 완료 ✓';
+    btn.style.background = '#22c55e';
+    setTimeout(removePopup, 1500);
+  } catch (e) {
+    btn.textContent = '오류';
+    btn.style.background = '#ef4444';
+    const msg = document.createElement('div');
+    msg.className = 'vp-save-msg vp-save-error';
+    msg.textContent = e.message || '저장 실패';
+    popup.querySelector('.vp-actions').before(msg);
+    btn.disabled = false;
+  }
+}
+
+async function saveCard({ detectedLang, translation, words }) {
+  const card = {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    lang: detectedLang || 'unknown',
+    translation,
+    words,
+    date: new Date().toLocaleDateString('ko-KR', {
+      year: 'numeric', month: '2-digit', day: '2-digit'
+    })
+  };
+  const { wordCards = [] } = await chrome.storage.local.get('wordCards');
+  wordCards.unshift(card);
+  await chrome.storage.local.set({ wordCards });
 }
 
 function createPopup(html) {
@@ -228,22 +253,15 @@ function createPopup(html) {
 
 function mountAndPosition(el, rect) {
   shadow.appendChild(el);
-
   const margin = 10;
   const vw = window.innerWidth;
   const vh = window.innerHeight;
-
-  // offsetWidth/Height는 Shadow DOM에서 정상 동작
   const pw = el.offsetWidth || 320;
   const ph = el.offsetHeight || 180;
-
-  // getBoundingClientRect()는 viewport 기준 → position:fixed 좌표와 동일
   let left = rect.left;
   let top = rect.bottom + margin;
-
   if (left + pw > vw - margin) left = vw - pw - margin;
   if (top + ph > vh - margin) top = rect.top - ph - margin;
-
   el.style.left = `${Math.max(margin, left)}px`;
   el.style.top = `${Math.max(margin, top)}px`;
 }
