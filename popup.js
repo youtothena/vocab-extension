@@ -1,14 +1,22 @@
 const LANG_LABELS = { fr: 'FR', en: 'EN', ko: 'KO', ja: 'JP' };
+const LANG_CODES = ['fr', 'en', 'ko', 'ja'];
 
 function getBrowserLangCode() {
   const nav = navigator.language.toLowerCase().split('-')[0];
-  return Object.keys(LANG_LABELS).includes(nav) ? nav : null;
+  return LANG_CODES.includes(nav) ? nav : null;
 }
 
 chrome.storage.local.get(['extensionEnabled', 'targetLang'], ({ extensionEnabled, targetLang }) => {
   const enabled = extensionEnabled !== false;
-  const lang = targetLang || 'en';
   const browserLang = getBrowserLangCode();
+
+  // If stored lang equals browser lang (or no stored lang and default 'en' equals browser lang),
+  // pick the first available non-browser lang
+  let lang = targetLang || 'en';
+  if (browserLang && lang === browserLang) {
+    lang = LANG_CODES.find(l => l !== browserLang) || 'en';
+    chrome.storage.local.set({ targetLang: lang });
+  }
 
   document.getElementById('enableToggle').checked = enabled;
 
@@ -38,5 +46,7 @@ document.querySelectorAll('.lang-btn').forEach(btn => {
 });
 
 document.getElementById('openSettings').addEventListener('click', () => {
-  chrome.runtime.openOptionsPage();
+  if (chrome.runtime.openOptionsPage) {
+    chrome.runtime.openOptionsPage();
+  }
 });
