@@ -11,174 +11,298 @@
       background: #f8fafc;
       color: #1e293b;
       min-height: 100vh;
-      padding: 40px 20px;
     }
-    .container {
-      max-width: 520px;
-      margin: 0 auto;
+
+    /* 탭 네비게이션 */
+    .tab-nav {
+      display: flex;
+      border-bottom: 2px solid #e2e8f0;
+      background: #ffffff;
+      padding: 0 20px;
     }
-    h1 {
-      font-size: 20px;
-      font-weight: 700;
-      margin-bottom: 6px;
-    }
-    .subtitle {
+    .tab-nav button {
+      padding: 14px 20px;
+      border: none;
+      background: none;
       font-size: 13px;
+      font-weight: 500;
       color: #64748b;
-      margin-bottom: 32px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.15s;
     }
-    .card {
+    .tab-nav button.active {
+      color: #3b82f6;
+      border-bottom-color: #3b82f6;
+      font-weight: 600;
+    }
+
+    /* 탭 패널 */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* 설정 탭 */
+    .settings-container { max-width: 520px; margin: 0 auto; padding: 32px 20px; }
+    h1 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+    .subtitle { font-size: 13px; color: #64748b; margin-bottom: 24px; }
+
+    /* ON/OFF 토글 카드 */
+    .toggle-card {
       background: #ffffff;
       border: 1px solid #e2e8f0;
       border-radius: 12px;
-      padding: 24px;
+      padding: 16px 24px;
       margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .toggle-card-label { font-size: 14px; font-weight: 600; }
+    .toggle { position: relative; width: 44px; height: 24px; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #cbd5e1; border-radius: 24px; transition: 0.2s;
+    }
+    .slider:before {
+      position: absolute; content: "";
+      height: 18px; width: 18px; left: 3px; bottom: 3px;
+      background: white; border-radius: 50%; transition: 0.2s;
+    }
+    input:checked + .slider { background: #3b82f6; }
+    input:checked + .slider:before { transform: translateX(20px); }
+
+    .card {
+      background: #ffffff; border: 1px solid #e2e8f0;
+      border-radius: 12px; padding: 24px; margin-bottom: 20px;
     }
     .card-title {
-      font-size: 14px;
-      font-weight: 600;
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      font-size: 14px; font-weight: 600; margin-bottom: 16px;
+      display: flex; align-items: center; gap: 8px;
     }
     .card-title .step {
-      width: 22px;
-      height: 22px;
-      background: #3b82f6;
-      color: white;
-      border-radius: 50%;
-      font-size: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
+      width: 22px; height: 22px; background: #3b82f6; color: white;
+      border-radius: 50%; font-size: 12px; display: flex;
+      align-items: center; justify-content: center; flex-shrink: 0;
     }
-    label {
-      display: block;
-      font-size: 12px;
-      font-weight: 500;
-      color: #475569;
-      margin-bottom: 6px;
-    }
+    label { display: block; font-size: 12px; font-weight: 500; color: #475569; margin-bottom: 6px; }
     input[type="text"], input[type="password"] {
-      width: 100%;
-      padding: 9px 12px;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      font-size: 13px;
-      color: #1e293b;
-      background: #f8fafc;
-      outline: none;
-      transition: border-color 0.15s;
+      width: 100%; padding: 9px 12px; border: 1px solid #e2e8f0;
+      border-radius: 8px; font-size: 13px; color: #1e293b;
+      background: #f8fafc; outline: none; transition: border-color 0.15s;
     }
-    input:focus {
-      border-color: #3b82f6;
-      background: #ffffff;
-    }
-    .help-text {
-      font-size: 11px;
-      color: #94a3b8;
-      margin-top: 5px;
-    }
+    input:focus { border-color: #3b82f6; background: #ffffff; }
+    .help-text { font-size: 11px; color: #94a3b8; margin-top: 5px; }
     .btn {
-      padding: 9px 16px;
-      border: none;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.15s;
+      padding: 9px 16px; border: none; border-radius: 8px;
+      font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s;
     }
-    .btn-primary {
-      background: #3b82f6;
-      color: white;
-    }
+    .btn-primary { background: #3b82f6; color: white; }
     .btn-primary:hover { background: #2563eb; }
-    .btn-secondary {
-      background: #f1f5f9;
-      color: #475569;
-    }
+    .btn-secondary { background: #f1f5f9; color: #475569; }
     .btn-secondary:hover { background: #e2e8f0; }
-    .btn-row {
-      display: flex;
-      gap: 8px;
-      margin-top: 12px;
-      align-items: center;
-    }
-    .status {
-      font-size: 12px;
-      padding: 3px 8px;
-      border-radius: 4px;
-    }
+    .btn-row { display: flex; gap: 8px; margin-top: 12px; align-items: center; }
+    .status { font-size: 12px; padding: 3px 8px; border-radius: 4px; }
     .status.ok { background: #dcfce7; color: #15803d; }
     .status.err { background: #fee2e2; color: #dc2626; }
-    .divider {
-      height: 1px;
-      background: #f1f5f9;
-      margin: 16px 0;
+    .divider { height: 1px; background: #f1f5f9; margin: 16px 0; }
+
+    /* 단어장 탭 */
+    .vocab-container {
+      display: flex;
+      height: calc(100vh - 50px);
     }
+    .lang-tabs {
+      width: 72px; flex-shrink: 0;
+      background: #ffffff;
+      border-right: 1px solid #e2e8f0;
+      padding: 16px 0;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .lang-tab {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 10px 4px; border: none; background: none;
+      cursor: pointer; border-radius: 8px; margin: 0 8px;
+      transition: all 0.15s;
+    }
+    .lang-tab .lang-code { font-size: 13px; font-weight: 700; color: #64748b; }
+    .lang-tab .lang-count { font-size: 10px; color: #94a3b8; margin-top: 2px; }
+    .lang-tab.active { background: #eff6ff; }
+    .lang-tab.active .lang-code { color: #3b82f6; }
+    .lang-tab.active .lang-count { color: #3b82f6; }
+
+    .cards-panel {
+      flex: 1; overflow-y: auto; padding: 20px;
+      background: #f8fafc;
+    }
+    .cards-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 16px;
+    }
+    .cards-title { font-size: 14px; font-weight: 600; }
+    .btn-export {
+      padding: 7px 14px; background: #3b82f6; color: white;
+      border: none; border-radius: 8px; font-size: 12px;
+      font-weight: 500; cursor: pointer; transition: background 0.15s;
+    }
+    .btn-export:hover { background: #2563eb; }
+    .btn-export:disabled { opacity: 0.6; cursor: default; }
+
+    .word-card {
+      background: #ffffff; border: 1px solid #e2e8f0;
+      border-radius: 10px; padding: 14px 16px; margin-bottom: 12px;
+    }
+    .word-card-header {
+      display: flex; justify-content: space-between;
+      align-items: flex-start; margin-bottom: 8px;
+    }
+    .word-card-translation {
+      font-size: 13px; color: #1e293b; flex: 1; margin-right: 8px;
+    }
+    .word-card-date { font-size: 11px; color: #94a3b8; white-space: nowrap; }
+    .word-card-words { margin-top: 8px; border-top: 1px solid #f1f5f9; padding-top: 8px; }
+    .word-entry { font-size: 12px; margin-bottom: 4px; }
+    .word-entry .w { font-weight: 600; color: #3b82f6; }
+    .word-entry .arr { color: #94a3b8; margin: 0 4px; }
+    .word-entry .m { color: #1e293b; }
+    .word-entry .s { font-size: 11px; color: #64748b; font-style: italic; display: block; margin-top: 1px; }
+    .btn-delete {
+      padding: 3px 8px; background: #fee2e2; color: #dc2626;
+      border: none; border-radius: 6px; font-size: 11px;
+      cursor: pointer; white-space: nowrap; flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    .btn-delete:hover { background: #fecaca; }
+    .empty-state {
+      text-align: center; padding: 60px 20px; color: #94a3b8;
+    }
+    .empty-state .emoji { font-size: 36px; margin-bottom: 12px; }
+    .export-status {
+      font-size: 12px; padding: 6px 12px; border-radius: 6px;
+      margin-top: 8px; display: none;
+    }
+    .export-status.ok { background: #dcfce7; color: #15803d; display: block; }
+    .export-status.err { background: #fee2e2; color: #dc2626; display: block; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>📚 Vocab Saver 설정</h1>
-    <p class="subtitle">아래 3가지를 설정하면 드래그 번역과 단어장 저장을 사용할 수 있습니다.</p>
 
-    <!-- Step 1: Translate API Key -->
-    <div class="card">
-      <div class="card-title">
-        <span class="step">1</span>
-        Google Translate API 키
-      </div>
-      <label for="apiKey">API 키</label>
-      <input type="password" id="apiKey" placeholder="AIza..." autocomplete="off">
-      <p class="help-text">
-        Google Cloud Console → Cloud Translation API → 사용자 인증 정보 → API 키 생성
-      </p>
-      <div class="btn-row">
-        <button class="btn btn-primary" id="saveApiKey">저장</button>
-        <span id="apiKeyStatus" class="status" style="display:none"></span>
-      </div>
-    </div>
+  <!-- 탭 네비게이션 -->
+  <nav class="tab-nav">
+    <button class="active" data-tab="settings">⚙ 설정</button>
+    <button data-tab="vocab">📖 단어장</button>
+  </nav>
 
-    <!-- Step 2: Spreadsheet ID -->
-    <div class="card">
-      <div class="card-title">
-        <span class="step">2</span>
-        Google Sheets Spreadsheet ID
-      </div>
-      <label for="spreadsheetId">Spreadsheet ID</label>
-      <input type="text" id="spreadsheetId" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms">
-      <p class="help-text">
-        Google Sheets URL에서 /d/ 뒤 ~ /edit 앞의 문자열을 복사해주세요.<br>
-        예: docs.google.com/spreadsheets/d/<strong>여기</strong>/edit
-      </p>
-      <div class="btn-row">
-        <button class="btn btn-primary" id="saveSheetId">저장</button>
-        <span id="sheetIdStatus" class="status" style="display:none"></span>
-      </div>
-    </div>
+  <!-- 설정 탭 -->
+  <div class="tab-panel active" id="tab-settings">
+    <div class="settings-container">
+      <h1>📚 Vocab Saver 설정</h1>
+      <p class="subtitle">아래 설정을 완료하면 드래그 번역과 단어 카드 저장을 사용할 수 있습니다.</p>
 
-    <!-- Step 3: Google OAuth -->
-    <div class="card">
-      <div class="card-title">
-        <span class="step">3</span>
-        Google Sheets 계정 연결
+      <!-- ON/OFF 토글 -->
+      <div class="toggle-card">
+        <span class="toggle-card-label">확장 사용</span>
+        <label class="toggle">
+          <input type="checkbox" id="enableToggle" checked>
+          <span class="slider"></span>
+        </label>
       </div>
-      <p style="font-size:13px; color:#475569; margin-bottom:12px;">
-        '확인' 버튼으로 단어를 저장할 때 Google 계정 인증이 필요합니다.
-      </p>
-      <div class="btn-row">
-        <button class="btn btn-primary" id="connectSheets">Google 계정 연결</button>
-        <span id="oauthStatus" class="status" style="display:none"></span>
+
+      <!-- Step 1: Translate API Key -->
+      <div class="card">
+        <div class="card-title">
+          <span class="step">1</span>
+          Google Translate API 키
+        </div>
+        <label for="apiKey">API 키</label>
+        <input type="password" id="apiKey" placeholder="AIza..." autocomplete="off">
+        <p class="help-text">
+          Google Cloud Console → Cloud Translation API → 사용자 인증 정보 → API 키 생성
+        </p>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="saveApiKey">저장</button>
+          <span id="apiKeyStatus" class="status" style="display:none"></span>
+        </div>
       </div>
-      <div class="divider"></div>
-      <p style="font-size:11px; color:#94a3b8;">
-        연결 후 스프레드시트 첫 번째 시트(Sheet1)에 <strong>단어 | 뜻 | 문장 | 작성한 날짜</strong> 순서로 헤더를 추가해두면 좋습니다.
-      </p>
+
+      <!-- Step 2: Spreadsheet ID -->
+      <div class="card">
+        <div class="card-title">
+          <span class="step">2</span>
+          Google Sheets Spreadsheet ID
+        </div>
+        <label for="spreadsheetId">Spreadsheet ID</label>
+        <input type="text" id="spreadsheetId" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms">
+        <p class="help-text">
+          Google Sheets URL에서 /d/ 뒤 ~ /edit 앞의 문자열을 복사해주세요.<br>
+          예: docs.google.com/spreadsheets/d/<strong>여기</strong>/edit
+        </p>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="saveSheetId">저장</button>
+          <span id="sheetIdStatus" class="status" style="display:none"></span>
+        </div>
+      </div>
+
+      <!-- Step 3: Google OAuth -->
+      <div class="card">
+        <div class="card-title">
+          <span class="step">3</span>
+          Google Sheets 계정 연결
+        </div>
+        <p style="font-size:13px; color:#475569; margin-bottom:12px;">
+          단어장을 Sheets로 내보낼 때 Google 계정 인증이 필요합니다.
+        </p>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="connectSheets">Google 계정 연결</button>
+          <span id="oauthStatus" class="status" style="display:none"></span>
+        </div>
+        <div class="divider"></div>
+        <p style="font-size:11px; color:#94a3b8;">
+          내보내기 시 FR / EN / KO / JP 시트에 단어 | 뜻 | 문장 | 날짜 순으로 저장됩니다.
+        </p>
+      </div>
     </div>
   </div>
+
+  <!-- 단어장 탭 -->
+  <div class="tab-panel" id="tab-vocab">
+    <div class="vocab-container">
+      <!-- 좌측 언어 탭 -->
+      <div class="lang-tabs">
+        <button class="lang-tab active" data-lang="fr">
+          <span class="lang-code">FR</span>
+          <span class="lang-count" id="count-fr">0</span>
+        </button>
+        <button class="lang-tab" data-lang="en">
+          <span class="lang-code">EN</span>
+          <span class="lang-count" id="count-en">0</span>
+        </button>
+        <button class="lang-tab" data-lang="ko">
+          <span class="lang-code">KO</span>
+          <span class="lang-count" id="count-ko">0</span>
+        </button>
+        <button class="lang-tab" data-lang="ja">
+          <span class="lang-code">JP</span>
+          <span class="lang-count" id="count-ja">0</span>
+        </button>
+      </div>
+
+      <!-- 우측 카드 목록 -->
+      <div class="cards-panel">
+        <div class="cards-header">
+          <span class="cards-title" id="cardsTitle">프랑스어 단어</span>
+          <div>
+            <button class="btn-export" id="btnExport">Sheets로 내보내기</button>
+            <div class="export-status" id="exportStatus"></div>
+          </div>
+        </div>
+        <div id="cardsList"></div>
+      </div>
+    </div>
+  </div>
+
   <script src="options.js"></script>
 </body>
 </html>
