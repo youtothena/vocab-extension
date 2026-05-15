@@ -110,17 +110,17 @@ document.addEventListener('mousedown', (e) => {
 function onMouseUp() {
   clearTimeout(translateTimeout);
   translateTimeout = setTimeout(async () => {
-    const { extensionEnabled } = await chrome.storage.local.get('extensionEnabled');
-    if (extensionEnabled === false) return;
-
     const selection = window.getSelection();
     const text = selection?.toString().trim();
     if (!text || text.length < 10) { removePopup(); return; }
 
-    const { targetLang = 'en' } = await chrome.storage.local.get('targetLang');
     const range = selection.getRangeAt(0);
     const rect = range.getBoundingClientRect();
     const words = extractKeywords(text);
+
+    const { extensionEnabled, targetLang = 'en' } =
+      await chrome.storage.local.get(['extensionEnabled', 'targetLang']);
+    if (extensionEnabled === false) return;
 
     showLoading(rect);
 
@@ -134,7 +134,7 @@ function onMouseUp() {
         return;
       }
       currentData = response;
-      showResult(response, rect);
+      showResult(response, rect, targetLang);
     });
   }, 300);
 }
@@ -170,9 +170,9 @@ function showError(msg, rect) {
   mountAndPosition(popup, rect);
 }
 
-function showResult({ detectedLang, translation, words }, rect) {
+function showResult({ detectedLang, translation, words }, rect, targetLang) {
   const langBadge = detectedLang
-    ? `<span class="vp-lang-badge">[${escapeHtml(detectedLang.toUpperCase())} →]</span>`
+    ? `<span class="vp-lang-badge">[${escapeHtml(detectedLang.toUpperCase())} → ${escapeHtml((targetLang || '').toUpperCase())}]</span>`
     : '';
   const wordsHtml = words.length === 0 ? '' : `
     <div class="vp-section-label">주요 단어</div>
@@ -195,19 +195,19 @@ function showResult({ detectedLang, translation, words }, rect) {
     <div class="vp-translation">${escapeHtml(translation)}</div>
     ${wordsHtml}
     <div class="vp-actions">
-      <button class="vp-btn vp-confirm">카드 저장</button>
+      ${words.length > 0 ? `<button class="vp-btn vp-confirm">카드 저장</button>` : ''}
       <button class="vp-btn vp-close">닫기</button>
     </div>
   `);
 
   popup.querySelector('.vp-x').addEventListener('click', removePopup);
   popup.querySelector('.vp-close').addEventListener('click', removePopup);
-  popup.querySelector('.vp-confirm').addEventListener('click', onSaveCard);
+  popup.querySelector('.vp-confirm')?.addEventListener('click', onSaveCard);
   mountAndPosition(popup, rect);
 }
 
 async function onSaveCard() {
-  if (!currentData) return;
+  if (!currentData || !popup) return;
   const btn = popup.querySelector('.vp-confirm');
   btn.textContent = '저장 중...';
   btn.disabled = true;
@@ -234,12 +234,11 @@ async function saveCard({ detectedLang, translation, words }) {
     lang: detectedLang || 'unknown',
     translation,
     words,
-    date: new Date().toLocaleDateString('ko-KR', {
-      year: 'numeric', month: '2-digit', day: '2-digit'
-    })
+    date: new Date().toISOString().slice(0, 10)
   };
   const { wordCards = [] } = await chrome.storage.local.get('wordCards');
   wordCards.unshift(card);
+  wordCards.splice(500);
   await chrome.storage.local.set({ wordCards });
 }
 
