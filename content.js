@@ -107,7 +107,10 @@ document.addEventListener('mousedown', (e) => {
   if (!path.includes(popup)) removePopup();
 });
 
-function onMouseUp() {
+function onMouseUp(e) {
+  // Clicks inside the popup (e.g., close button) also fire mouseup — ignore them
+  if (popup && e.composedPath().includes(popup)) return;
+
   clearTimeout(translateTimeout);
 
   // Capture selection immediately — a 300ms delay lets page scripts clear it
@@ -127,7 +130,8 @@ function onMouseUp() {
 
   translateTimeout = setTimeout(async () => {
     try {
-      const { extensionEnabled, targetLang = 'en' } =
+      const browserLang = navigator.language.split('-')[0];
+      const { extensionEnabled, targetLang = browserLang } =
         await chrome.storage.local.get(['extensionEnabled', 'targetLang']);
       if (extensionEnabled === false) return;
 
