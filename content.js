@@ -126,24 +126,29 @@ function onMouseUp() {
   const words = extractKeywords(text);
 
   translateTimeout = setTimeout(async () => {
-    const { extensionEnabled, targetLang = 'en' } =
-      await chrome.storage.local.get(['extensionEnabled', 'targetLang']);
-    if (extensionEnabled === false) return;
+    try {
+      const { extensionEnabled, targetLang = 'en' } =
+        await chrome.storage.local.get(['extensionEnabled', 'targetLang']);
+      if (extensionEnabled === false) return;
 
-    showLoading(rect);
+      showLoading(rect);
 
-    chrome.runtime.sendMessage({ action: 'translate', text, words, targetLang }, (response) => {
-      if (chrome.runtime.lastError || response?.error) {
-        showError(response?.error || '번역 중 오류가 발생했습니다.', rect);
-        return;
-      }
-      if (response?.skip) {
-        removePopup();
-        return;
-      }
-      currentData = response;
-      showResult(response, rect, targetLang);
-    });
+      chrome.runtime.sendMessage({ action: 'translate', text, words, targetLang }, (response) => {
+        if (chrome.runtime.lastError || response?.error) {
+          showError(response?.error || '번역 중 오류가 발생했습니다.', rect);
+          return;
+        }
+        if (response?.skip) {
+          removePopup();
+          return;
+        }
+        currentData = response;
+        showResult(response, rect, targetLang);
+      });
+    } catch {
+      // Extension context invalidated after reload — silently clean up
+      removePopup();
+    }
   }, 300);
 }
 
@@ -274,7 +279,7 @@ function mountAndPosition(el, rect) {
 }
 
 function removePopup() {
-  if (popup) { popup.remove(); popup = null; currentData = null; }
+  if (popup) { try { popup.remove(); } catch {} popup = null; currentData = null; }
 }
 
 function escapeHtml(str) {
